@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DecideForMe</string>
+    <string name="decide_button">Decide For Me</string>
+    <string name="onboarding_welcome">Stop thinking.\nStart doing.</string>
+    <string name="onboarding_subtitle">Let DecideForMe handle the small decisions so you can focus on what matters.</string>
+    <string name="get_started">Get Started</string>
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    <string name="done">Done</string>
+    <string name="sign_in_google">Continue with Google</string>
+    <string name="continue_without_sign_in">Continue without sign-in</string>
+</resources>
