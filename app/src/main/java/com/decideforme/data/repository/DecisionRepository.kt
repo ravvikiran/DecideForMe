@@ -58,10 +58,11 @@ class DecisionRepository(
         try {
             val content = json.encodeToString(data)
             dataFile.writeText(content)
-            _appData.value = data
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }.also {
+        _appData.value = data
     }
 
     suspend fun updateProfile(profile: UserProfile) {

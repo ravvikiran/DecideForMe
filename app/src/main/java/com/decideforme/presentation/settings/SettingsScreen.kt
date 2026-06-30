@@ -111,7 +111,6 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
-    val context = LocalContext.current
 
     Column(
         modifier = Modifier

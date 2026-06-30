@@ -114,7 +114,6 @@ fun ShareScreen(
 
         // Couple decide button
         uiState.selectedCategory?.let { category ->
-            val hasPartnerData = uiState.categories.any { it.id == category.id }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = { viewModel.decideForCouple(category.id) },

@@ -34,7 +34,6 @@ fun SlotMachineAnimation(
 ) {
     var displayedText by remember { mutableStateOf("") }
     var currentIndex by remember { mutableIntStateOf(0) }
-    val animatedOffset = remember { Animatable(0f) }
 
     LaunchedEffect(isAnimating) {
         if (isAnimating && options.isNotEmpty()) {
