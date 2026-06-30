@@ -92,13 +92,37 @@ class ShareViewModel @Inject constructor(
     fun importShareData(jsonString: String) {
         viewModelScope.launch {
             try {
+                // Input validation
+                if (jsonString.length > 500_000) {
+                    _uiState.value = _uiState.value.copy(
+                        importResult = "Import failed: data too large"
+                    )
+                    return@launch
+                }
+
                 val payload = json.decodeFromString<SharePayload>(jsonString)
+
+                // Validate payload integrity
+                if (payload.options.size > 200) {
+                    _uiState.value = _uiState.value.copy(
+                        importResult = "Import failed: too many options"
+                    )
+                    return@launch
+                }
+
+                // Sanitize options: clamp weights and trim names
+                val sanitizedOptions = payload.options.map { option ->
+                    option.copy(
+                        name = option.name.take(100),
+                        weight = option.weight.coerceIn(0.1, 5.0)
+                    )
+                }
                 
                 // Save partner preferences
                 val shared = SharedCategory(
                     categoryId = payload.categoryId,
                     shareCode = payload.shareCode,
-                    partnerPreferences = payload.options
+                    partnerPreferences = sanitizedOptions
                 )
 
                 val currentData = repository.currentData
@@ -187,6 +211,7 @@ class ShareViewModel @Inject constructor(
     }
 
     fun dismissSharing() {
+        _uiState.value.qrBitmap?.recycle()
         _uiState.value = _uiState.value.copy(isSharing = false, qrBitmap = null)
     }
 

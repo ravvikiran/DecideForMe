@@ -13,6 +13,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -34,10 +35,15 @@ class DecisionRepository(
 
     val currentData: AppData get() = _appData.value
 
+    private var isInitialized = false
+
     suspend fun initialize() {
+        if (isInitialized) return
         mutex.withLock {
+            if (isInitialized) return // Double-check after acquiring lock
             val data = loadData()
             _appData.value = data
+            isInitialized = true
         }
     }
 
@@ -50,18 +56,47 @@ class DecisionRepository(
                 AppData()
             }
         } catch (e: Exception) {
-            AppData()
+            // If JSON is corrupted, try reading backup
+            val backupFile = File(context.filesDir, "decideforme_data.json.bak")
+            if (backupFile.exists()) {
+                try {
+                    val content = backupFile.readText()
+                    json.decodeFromString<AppData>(content)
+                } catch (_: Exception) {
+                    AppData()
+                }
+            } else {
+                AppData()
+            }
         }
     }
 
-    private suspend fun saveData(data: AppData) = withContext(Dispatchers.IO) {
-        try {
-            val content = json.encodeToString(data)
-            dataFile.writeText(content)
-        } catch (e: Exception) {
-            e.printStackTrace()
+    /**
+     * Atomic file write: write to temp file, then rename.
+     * Prevents data corruption if app crashes mid-write.
+     */
+    private suspend fun saveData(data: AppData) {
+        withContext(Dispatchers.IO) {
+            try {
+                val content = json.encodeToString(data)
+                val tempFile = File(context.filesDir, "decideforme_data.json.tmp")
+                val backupFile = File(context.filesDir, "decideforme_data.json.bak")
+
+                // Write to temp file
+                tempFile.writeText(content)
+
+                // Backup current file
+                if (dataFile.exists()) {
+                    dataFile.copyTo(backupFile, overwrite = true)
+                }
+
+                // Atomic rename
+                tempFile.renameTo(dataFile)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-    }.also {
+        // Emit on caller's context (safe for StateFlow)
         _appData.value = data
     }
 
@@ -154,13 +189,17 @@ class DecisionRepository(
                 } else category
             }
 
-            // Update streaks
+            // Update streaks using device local timezone
             val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+            val yesterday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
             val streaks = _appData.value.streaks
-            val newStreak = if (streaks.lastDecisionDate == LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE) ||
-                streaks.lastDecisionDate == today) {
-                if (streaks.lastDecisionDate != today) streaks.currentStreak + 1 else streaks.currentStreak
-            } else 1
+
+            val newStreak = when {
+                streaks.lastDecisionDate == today -> streaks.currentStreak
+                streaks.lastDecisionDate == yesterday -> streaks.currentStreak + 1
+                streaks.lastDecisionDate.isEmpty() -> 1
+                else -> 1 // Streak broken
+            }
 
             val updatedStreaks = streaks.copy(
                 currentStreak = newStreak,
@@ -171,9 +210,12 @@ class DecisionRepository(
                 totalRejected = if (!wasAccepted) streaks.totalRejected + 1 else streaks.totalRejected
             )
 
+            // Prune history: keep last 1000 entries to prevent unbounded growth
+            val newHistory = (_appData.value.decisionHistory + record).takeLast(MAX_HISTORY_ENTRIES)
+
             val updated = _appData.value.copy(
                 categories = categories,
-                decisionHistory = _appData.value.decisionHistory + record,
+                decisionHistory = newHistory,
                 streaks = updatedStreaks
             )
             saveData(updated)
@@ -228,5 +270,25 @@ class DecisionRepository(
             val updated = _appData.value.copy(categories = categories)
             saveData(updated)
         }
+    }
+
+    /**
+     * Removes the last decision from history.
+     * Note: Does not reverse weight changes (simple undo).
+     */
+    suspend fun undoLastDecision(): Boolean {
+        mutex.withLock {
+            val history = _appData.value.decisionHistory
+            if (history.isEmpty()) return false
+            val updated = _appData.value.copy(
+                decisionHistory = history.dropLast(1)
+            )
+            saveData(updated)
+            return true
+        }
+    }
+
+    companion object {
+        private const val MAX_HISTORY_ENTRIES = 1000
     }
 }

@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -28,7 +30,8 @@ data class HomeUiState(
     val greeting: String = "",
     val currentMood: String = "neutral",
     val moodInsight: String = "",
-    val lastDecision: DecisionOption? = null  // For undo
+    val lastDecision: DecisionOption? = null,
+    val noMoreOptions: Boolean = false
 )
 
 @HiltViewModel
@@ -52,8 +55,13 @@ class HomeViewModel @Inject constructor(
 
     private fun updateState(data: AppData) {
         val enabledCategories = data.categories.filter { it.isEnabled && it.options.isNotEmpty() }
-        val todayStart = java.time.LocalDate.now().atStartOfDay()
-            .toEpochSecond(java.time.ZoneOffset.UTC) * 1000
+
+        // Use device local timezone for "today" calculation
+        val todayStart = LocalDate.now()
+            .atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
         val todayDecisions = data.decisionHistory.count {
             it.timestamp >= todayStart && it.wasAccepted
         }
@@ -79,7 +87,8 @@ class HomeViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             selectedCategory = category,
             rejectedThisSession = emptyList(),
-            showResult = false
+            showResult = false,
+            noMoreOptions = false
         )
     }
 
@@ -88,8 +97,9 @@ class HomeViewModel @Inject constructor(
             // Auto-pick a random enabled category
             val categories = _uiState.value.categories
             if (categories.isEmpty()) return
-            _uiState.value = _uiState.value.copy(selectedCategory = categories.random())
-            _uiState.value.selectedCategory ?: return
+            val picked = categories.random()
+            _uiState.value = _uiState.value.copy(selectedCategory = picked)
+            picked
         }
 
         val recentIds = repository.currentData.decisionHistory
@@ -110,11 +120,20 @@ class HomeViewModel @Inject constructor(
             excludeIds = _uiState.value.rejectedThisSession
         )
 
-        _uiState.value = _uiState.value.copy(
-            currentDecision = decision,
-            isDeciding = false,
-            showResult = true
-        )
+        if (decision == null) {
+            // No more options available — inform user
+            _uiState.value = _uiState.value.copy(
+                noMoreOptions = true,
+                showResult = false
+            )
+        } else {
+            _uiState.value = _uiState.value.copy(
+                currentDecision = decision,
+                isDeciding = false,
+                showResult = true,
+                noMoreOptions = false
+            )
+        }
     }
 
     fun acceptDecision() {
@@ -163,22 +182,14 @@ class HomeViewModel @Inject constructor(
             showResult = false,
             currentDecision = null,
             selectedCategory = null,
-            rejectedThisSession = emptyList()
+            rejectedThisSession = emptyList(),
+            noMoreOptions = false
         )
     }
 
     fun undoLastDecision() {
-        // Undo by removing the last history entry (simple approach)
         viewModelScope.launch {
-            val data = repository.currentData
-            if (data.decisionHistory.isNotEmpty()) {
-                val updatedHistory = data.decisionHistory.dropLast(1)
-                val updatedData = data.copy(decisionHistory = updatedHistory)
-                val json = kotlinx.serialization.json.Json { encodeDefaults = true }
-                repository.importData(json.encodeToString(
-                    com.decideforme.data.model.AppData.serializer(), updatedData
-                ))
-            }
+            repository.undoLastDecision()
             _uiState.value = _uiState.value.copy(lastDecision = null)
         }
     }

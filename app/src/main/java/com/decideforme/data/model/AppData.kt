@@ -89,6 +89,8 @@ data class AppSettings(
     val hapticEnabled: Boolean = true,
     val shakeToDecide: Boolean = true,
     val showConfetti: Boolean = true,
+    val dailyReminderEnabled: Boolean = false,
+    val autoAcceptTimer: Boolean = false,
     val dietaryRestrictions: List<String> = emptyList(),
     val fitnessLevel: String = "moderate",      // beginner, moderate, advanced
     val currentWeather: String = "any"

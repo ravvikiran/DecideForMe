@@ -7,8 +7,10 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.decideforme.R
 import com.decideforme.presentation.MainActivity
 import java.util.Calendar
@@ -22,7 +24,6 @@ class NotificationScheduler(private val context: Context) {
     companion object {
         const val CHANNEL_ID = "decide_reminders"
         const val NOTIFICATION_ID = 1001
-        const val ACTION_DAILY_REMINDER = "com.decideforme.DAILY_REMINDER"
     }
 
     fun createNotificationChannel() {
@@ -39,11 +40,25 @@ class NotificationScheduler(private val context: Context) {
         }
     }
 
-    fun scheduleDailyReminder(hour: Int = 9, minute: Int = 0) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            action = ACTION_DAILY_REMINDER
+    /**
+     * Check if notification permission is granted (Android 13+).
+     */
+    fun hasNotificationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true // Permission not required below API 33
         }
+    }
+
+    fun scheduleDailyReminder(hour: Int = 9, minute: Int = 0) {
+        if (!hasNotificationPermission()) return
+
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, ReminderReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context, 0, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -58,7 +73,8 @@ class NotificationScheduler(private val context: Context) {
             }
         }
 
-        alarmManager.setRepeating(
+        // Use inexact repeating alarm — does NOT require SCHEDULE_EXACT_ALARM permission
+        alarmManager.setInexactRepeating(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
             AlarmManager.INTERVAL_DAY,
@@ -88,6 +104,15 @@ class ReminderReceiver : BroadcastReceiver() {
     )
 
     override fun onReceive(context: Context, intent: Intent?) {
+        // Check notification permission at runtime
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) return
+        }
+
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 

@@ -1,6 +1,5 @@
 package com.decideforme.presentation.settings
 
-import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -77,6 +75,20 @@ class SettingsViewModel @Inject constructor(
     fun toggleConfetti(enabled: Boolean) {
         viewModelScope.launch {
             val updated = _settings.value.copy(showConfetti = enabled)
+            repository.updateSettings(updated)
+        }
+    }
+
+    fun toggleDailyReminder(enabled: Boolean) {
+        viewModelScope.launch {
+            val updated = _settings.value.copy(dailyReminderEnabled = enabled)
+            repository.updateSettings(updated)
+        }
+    }
+
+    fun toggleAutoAcceptTimer(enabled: Boolean) {
+        viewModelScope.launch {
+            val updated = _settings.value.copy(autoAcceptTimer = enabled)
             repository.updateSettings(updated)
         }
     }
@@ -255,14 +267,14 @@ fun SettingsScreen(
             SettingsSwitch(
                 title = "Daily Reminder",
                 subtitle = "Get a nudge to keep your streak alive",
-                checked = settings.hapticEnabled, // Reuse for now (add dedicated field)
-                onCheckedChange = { /* toggle notification scheduling */ }
+                checked = settings.dailyReminderEnabled,
+                onCheckedChange = { viewModel.toggleDailyReminder(it) }
             )
             SettingsSwitch(
                 title = "Auto-Accept Timer",
                 subtitle = "Auto-accept after 10s (speed round mode)",
-                checked = false,
-                onCheckedChange = { /* timer setting */ }
+                checked = settings.autoAcceptTimer,
+                onCheckedChange = { viewModel.toggleAutoAcceptTimer(it) }
             )
         }
 
