@@ -1,23 +1,30 @@
 package com.decideforme.presentation.widget
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
-import androidx.glance.*
-import androidx.glance.action.ActionParameters
-import androidx.glance.action.actionParametersOf
+import androidx.compose.ui.unit.sp
+import androidx.glance.GlanceId
+import androidx.glance.GlanceModifier
+import androidx.glance.GlanceTheme
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.cornerRadius
-import androidx.glance.layout.*
+import androidx.glance.background
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
+import androidx.glance.layout.Column
+import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.height
+import androidx.glance.layout.padding
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.decideforme.R
 import com.decideforme.presentation.MainActivity
 
 /**
@@ -28,7 +35,9 @@ class DecideGlanceWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
-            DecideWidgetContent()
+            GlanceTheme {
+                DecideWidgetContent()
+            }
         }
     }
 
@@ -37,7 +46,6 @@ class DecideGlanceWidget : GlanceAppWidget() {
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .cornerRadius(24.dp)
                 .background(GlanceTheme.colors.primaryContainer)
                 .clickable(actionStartActivity<MainActivity>()),
             contentAlignment = Alignment.Center
@@ -49,11 +57,11 @@ class DecideGlanceWidget : GlanceAppWidget() {
             ) {
                 Text(
                     text = "✨",
-                    style = TextStyle(fontSize = androidx.compose.ui.unit.TextUnit.Unspecified)
+                    style = TextStyle(fontSize = 28.sp)
                 )
-                
+
                 Spacer(modifier = GlanceModifier.height(8.dp))
-                
+
                 Text(
                     text = "Decide For Me",
                     style = TextStyle(
@@ -61,9 +69,9 @@ class DecideGlanceWidget : GlanceAppWidget() {
                         color = GlanceTheme.colors.onPrimaryContainer
                     )
                 )
-                
+
                 Spacer(modifier = GlanceModifier.height(4.dp))
-                
+
                 Text(
                     text = "Tap for instant decision",
                     style = TextStyle(

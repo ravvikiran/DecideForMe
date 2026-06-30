@@ -2,7 +2,6 @@ package com.decideforme.data.repository
 
 import android.content.Context
 import com.decideforme.data.model.*
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,12 +15,9 @@ import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class DecisionRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+class DecisionRepository(
+    private val context: Context
 ) {
     private val json = Json {
         prettyPrint = true

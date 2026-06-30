@@ -174,8 +174,9 @@ class HomeViewModel @Inject constructor(
             if (data.decisionHistory.isNotEmpty()) {
                 val updatedHistory = data.decisionHistory.dropLast(1)
                 val updatedData = data.copy(decisionHistory = updatedHistory)
-                repository.importData(kotlinx.serialization.json.Json.encodeToString(
-                    kotlinx.serialization.serializer(), updatedData
+                val json = kotlinx.serialization.json.Json { encodeDefaults = true }
+                repository.importData(json.encodeToString(
+                    com.decideforme.data.model.AppData.serializer(), updatedData
                 ))
             }
             _uiState.value = _uiState.value.copy(lastDecision = null)
