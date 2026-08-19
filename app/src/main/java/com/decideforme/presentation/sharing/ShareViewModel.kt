@@ -203,7 +203,9 @@ class ShareViewModel @Inject constructor(
             putExtra(Intent.EXTRA_SUBJECT, "DecideForMe - ${category.name}")
             putExtra(Intent.EXTRA_TEXT, payloadJson)
         }
-        context.startActivity(Intent.createChooser(intent, "Share category via"))
+        val chooser = Intent.createChooser(intent, "Share category via")
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(chooser)
     }
 
     fun dismissImportResult() {

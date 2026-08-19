@@ -61,7 +61,11 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.1")
+
+    // Material Components (for theme compatibility)
+    implementation("com.google.android.material:material:1.11.0")
 
     // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2023.10.01"))

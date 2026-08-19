@@ -31,7 +31,8 @@ data class HomeUiState(
     val currentMood: String = "neutral",
     val moodInsight: String = "",
     val lastDecision: DecisionOption? = null,
-    val noMoreOptions: Boolean = false
+    val noMoreOptions: Boolean = false,
+    val shakeToDecideEnabled: Boolean = true
 )
 
 @HiltViewModel
@@ -75,7 +76,8 @@ class HomeViewModel @Inject constructor(
             todayDecisions = todayDecisions,
             categories = enabledCategories,
             greeting = getGreeting(data.userProfile.displayName),
-            moodInsight = insight.pattern
+            moodInsight = insight.pattern,
+            shakeToDecideEnabled = data.settings.shakeToDecide
         )
     }
 

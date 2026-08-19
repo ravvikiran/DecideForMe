@@ -28,7 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,10 +56,15 @@ fun HomeScreen(
     var slotMachineComplete by remember { mutableStateOf(false) }
     var showConfetti by remember { mutableStateOf(false) }
 
-    // Shake-to-decide
+    // Shake-to-decide (respects user setting)
+    val shakeEnabled = uiState.shakeToDecideEnabled
+
+    // Use a ref for the shake callback to avoid capturing stale state
+    val currentUiState = rememberUpdatedState(uiState)
     val shakeDetector = remember {
         ShakeDetector(context) {
-            if (!uiState.showResult && uiState.categories.isNotEmpty()) {
+            val state = currentUiState.value
+            if (!state.showResult && state.categories.isNotEmpty()) {
                 showSlotMachine = true
                 viewModel.decide()
             }
@@ -67,17 +72,21 @@ fun HomeScreen(
     }
 
     // Lifecycle-aware shake detection
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> shakeDetector.start()
-                Lifecycle.Event.ON_PAUSE -> shakeDetector.stop()
-                else -> {}
-            }
+    DisposableEffect(lifecycleOwner, shakeEnabled) {
+        val observer = if (shakeEnabled) {
+            LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_RESUME -> shakeDetector.start()
+                    Lifecycle.Event.ON_PAUSE -> shakeDetector.stop()
+                    else -> {}
+                }
+            }.also { lifecycleOwner.lifecycle.addObserver(it) }
+        } else {
+            shakeDetector.stop()
+            null
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
+            observer?.let { lifecycleOwner.lifecycle.removeObserver(it) }
             shakeDetector.stop()
         }
     }

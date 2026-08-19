@@ -5,7 +5,6 @@ import com.decideforme.data.model.DecisionOption
 import java.time.LocalDateTime
 import java.time.LocalDate
 import java.time.DayOfWeek
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.random.Random
@@ -55,10 +54,11 @@ class DecisionEngine @Inject constructor() {
 
         for ((option, score) in scoredOptions) {
             cumulative += score
-            if (rand <= cumulative) return option
+            if (rand < cumulative) return option
         }
 
-        return scoredOptions.lastOrNull()?.first
+        // Fallback for floating-point edge case — always return last item
+        return scoredOptions.last().first
     }
 
     private fun calculateScore(option: DecisionOption, context: DecisionContext): Double {

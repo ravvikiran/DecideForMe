@@ -70,7 +70,7 @@ fun OnboardingScreen(
 
             // Progress indicator
             LinearProgressIndicator(
-                progress = (uiState.currentPage + 1).toFloat() / uiState.totalPages,
+                progress = { (uiState.currentPage + 1).toFloat() / uiState.totalPages },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)

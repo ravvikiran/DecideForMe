@@ -96,7 +96,7 @@ class DecisionRepository(
                 e.printStackTrace()
             }
         }
-        // Emit on caller's context (safe for StateFlow)
+        // Emit new state — called within mutex so ordering is guaranteed
         _appData.value = data
     }
 

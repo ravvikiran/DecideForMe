@@ -181,7 +181,7 @@ private fun CategoryCard(
 
             if (expanded) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider()
+                HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
 
                 category.options.forEach { option ->

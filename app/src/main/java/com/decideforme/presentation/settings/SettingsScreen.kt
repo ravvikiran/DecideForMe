@@ -79,10 +79,18 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun toggleDailyReminder(enabled: Boolean) {
+    fun toggleDailyReminder(enabled: Boolean, context: android.content.Context) {
         viewModelScope.launch {
             val updated = _settings.value.copy(dailyReminderEnabled = enabled)
             repository.updateSettings(updated)
+
+            val scheduler = com.decideforme.domain.NotificationScheduler(context)
+            scheduler.createNotificationChannel()
+            if (enabled) {
+                scheduler.scheduleDailyReminder()
+            } else {
+                scheduler.cancelDailyReminder()
+            }
         }
     }
 
@@ -123,6 +131,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(
         modifier = Modifier
@@ -268,7 +277,7 @@ fun SettingsScreen(
                 title = "Daily Reminder",
                 subtitle = "Get a nudge to keep your streak alive",
                 checked = settings.dailyReminderEnabled,
-                onCheckedChange = { viewModel.toggleDailyReminder(it) }
+                onCheckedChange = { viewModel.toggleDailyReminder(it, context) }
             )
             SettingsSwitch(
                 title = "Auto-Accept Timer",
