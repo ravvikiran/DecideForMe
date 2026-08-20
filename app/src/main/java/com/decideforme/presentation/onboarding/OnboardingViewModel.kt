@@ -49,7 +49,7 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun setUserName(name: String) {
-        _uiState.value = _uiState.value.copy(userName = name)
+        _uiState.value = _uiState.value.copy(userName = name.take(50))
     }
 
     fun toggleCategory(categoryId: String) {

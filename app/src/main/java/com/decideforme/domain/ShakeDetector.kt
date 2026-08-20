@@ -32,7 +32,7 @@ class ShakeDetector(
     }
 
     fun start() {
-        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
         accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         accelerometer?.let {
             sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)

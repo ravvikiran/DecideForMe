@@ -339,7 +339,7 @@ private fun AddCategoryDialog(
         text = {
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = { name = it.take(50) },
                 label = { Text("Category name") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -347,7 +347,7 @@ private fun AddCategoryDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { if (name.isNotBlank()) onAdd(name, "category") },
+                onClick = { if (name.isNotBlank()) onAdd(name.trim(), "category") },
                 enabled = name.isNotBlank()
             ) {
                 Text("Add")
@@ -374,7 +374,7 @@ private fun AddOptionDialog(
         text = {
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = { name = it.take(100) },
                 label = { Text("Option name") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -382,7 +382,7 @@ private fun AddOptionDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { if (name.isNotBlank()) onAdd(name) },
+                onClick = { if (name.isNotBlank()) onAdd(name.trim()) },
                 enabled = name.isNotBlank()
             ) {
                 Text("Add")

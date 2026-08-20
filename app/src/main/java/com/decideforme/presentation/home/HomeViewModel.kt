@@ -96,8 +96,10 @@ class HomeViewModel @Inject constructor(
 
     fun decide() {
         val category = _uiState.value.selectedCategory ?: run {
-            // Auto-pick a random enabled category
-            val categories = _uiState.value.categories
+            // Auto-pick a random enabled category that has active options
+            val categories = _uiState.value.categories.filter { cat ->
+                cat.options.any { it.isActive && it.id !in _uiState.value.rejectedThisSession }
+            }
             if (categories.isEmpty()) return
             val picked = categories.random()
             _uiState.value = _uiState.value.copy(selectedCategory = picked)
@@ -202,7 +204,7 @@ class HomeViewModel @Inject constructor(
             hour in 5..11 -> "Good morning"
             hour in 12..16 -> "Good afternoon"
             hour in 17..20 -> "Good evening"
-            else -> "Hey there"
+            else -> "Good night"
         }
         return if (name.isNotBlank()) "$timeGreeting, $name" else timeGreeting
     }

@@ -14,6 +14,7 @@ import com.google.android.gms.common.api.ApiException
  * Purely optional — provides personalized greeting, profile photo.
  * Zero cost — uses free Google Identity SDK.
  */
+@Suppress("DEPRECATION")
 class GoogleSignInHelper(private val context: Context) {
 
     private val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

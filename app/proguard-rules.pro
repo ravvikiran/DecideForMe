@@ -14,3 +14,12 @@
 -keepclasseswithmembers class com.decideforme.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
+
+# Google Sign-In
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-dontwarn com.google.android.gms.**
+
+# ZXing QR Code generation
+-keep class com.google.zxing.** { *; }
+-dontwarn com.google.zxing.**

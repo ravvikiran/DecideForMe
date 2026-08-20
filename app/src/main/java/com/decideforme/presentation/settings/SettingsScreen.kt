@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.decideforme.data.model.AppSettings
 import com.decideforme.data.repository.DecisionRepository
+import com.decideforme.domain.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +27,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val repository: DecisionRepository
+    private val repository: DecisionRepository,
+    private val notificationScheduler: NotificationScheduler
 ) : ViewModel() {
 
     private val _settings = MutableStateFlow(AppSettings())
@@ -79,17 +81,16 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun toggleDailyReminder(enabled: Boolean, context: android.content.Context) {
+    fun toggleDailyReminder(enabled: Boolean) {
         viewModelScope.launch {
             val updated = _settings.value.copy(dailyReminderEnabled = enabled)
             repository.updateSettings(updated)
 
-            val scheduler = com.decideforme.domain.NotificationScheduler(context)
-            scheduler.createNotificationChannel()
+            notificationScheduler.createNotificationChannel()
             if (enabled) {
-                scheduler.scheduleDailyReminder()
+                notificationScheduler.scheduleDailyReminder()
             } else {
-                scheduler.cancelDailyReminder()
+                notificationScheduler.cancelDailyReminder()
             }
         }
     }
@@ -131,7 +132,6 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
-    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(
         modifier = Modifier
@@ -277,7 +277,7 @@ fun SettingsScreen(
                 title = "Daily Reminder",
                 subtitle = "Get a nudge to keep your streak alive",
                 checked = settings.dailyReminderEnabled,
-                onCheckedChange = { viewModel.toggleDailyReminder(it, context) }
+                onCheckedChange = { viewModel.toggleDailyReminder(it) }
             )
             SettingsSwitch(
                 title = "Auto-Accept Timer",

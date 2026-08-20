@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -448,19 +447,4 @@ private fun PreferencesPage(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun FlowRow(
-    modifier: Modifier = Modifier,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
-    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
-    content: @Composable () -> Unit
-) {
-    androidx.compose.foundation.layout.FlowRow(
-        modifier = modifier,
-        horizontalArrangement = horizontalArrangement,
-        verticalArrangement = verticalArrangement
-    ) {
-        content()
-    }
-}
+

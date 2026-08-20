@@ -64,6 +64,11 @@ class ShareViewModel @Inject constructor(
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        _uiState.value.qrBitmap?.recycle()
+    }
+
     fun selectCategory(category: Category) {
         _uiState.value = _uiState.value.copy(selectedCategory = category)
     }

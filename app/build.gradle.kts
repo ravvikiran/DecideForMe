@@ -87,9 +87,6 @@ dependencies {
     // Kotlin Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.1")
 
-    // DataStore
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
@@ -105,9 +102,6 @@ dependencies {
 
     // QR Code generation (ZXing - free/open source)
     implementation("com.google.zxing:core:3.5.2")
-
-    // Accompanist
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

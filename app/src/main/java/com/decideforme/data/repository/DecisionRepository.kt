@@ -1,6 +1,7 @@
 package com.decideforme.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.decideforme.data.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -13,7 +14,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -56,13 +56,15 @@ class DecisionRepository(
                 AppData()
             }
         } catch (e: Exception) {
+            Log.w("DecisionRepository", "Primary data file corrupted, trying backup", e)
             // If JSON is corrupted, try reading backup
             val backupFile = File(context.filesDir, "decideforme_data.json.bak")
             if (backupFile.exists()) {
                 try {
                     val content = backupFile.readText()
                     json.decodeFromString<AppData>(content)
-                } catch (_: Exception) {
+                } catch (backupEx: Exception) {
+                    Log.e("DecisionRepository", "Backup also corrupted, starting fresh", backupEx)
                     AppData()
                 }
             } else {
@@ -76,7 +78,7 @@ class DecisionRepository(
      * Prevents data corruption if app crashes mid-write.
      */
     private suspend fun saveData(data: AppData) {
-        withContext(Dispatchers.IO) {
+        val writeSuccess = withContext(Dispatchers.IO) {
             try {
                 val content = json.encodeToString(data)
                 val tempFile = File(context.filesDir, "decideforme_data.json.tmp")
@@ -92,12 +94,16 @@ class DecisionRepository(
 
                 // Atomic rename
                 tempFile.renameTo(dataFile)
+                true
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("DecisionRepository", "Failed to save data", e)
+                false
             }
         }
-        // Emit new state — called within mutex so ordering is guaranteed
-        _appData.value = data
+        // Only emit new state if file write succeeded
+        if (writeSuccess) {
+            _appData.value = data
+        }
     }
 
     suspend fun updateProfile(profile: UserProfile) {
